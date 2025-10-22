@@ -27,14 +27,17 @@ while cam.isOpened():
 
     mask_eroded = cv2.morphologyEx(mask_thresh, cv2.MORPH_OPEN, kernel)
 
-    min_contour_area = 500
+    min_contour_area = 2500
     large_contours = [
         cnt for cnt in contours if cv2.contourArea(cnt) > min_contour_area
     ]
 
-    frame_ct = cv2.drawContours(frame, large_contours, -1, (0, 255, 0), 2)
+    frame_out = frame.copy()
+    for cnt in large_contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+        frame_out = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 200), 3)
 
-    cv2.imshow("Frame", frame_ct)
+    cv2.imshow('Live Feed', frame_out)
 
     if cv2.waitKey(1) == 27:
         break
