@@ -64,8 +64,8 @@ output_dir = ""
 
 logs = {"detecoes": []}
 
-tempo_sem_movimento_limite = 3  # segundos para agrupar movimentos curtos
-ultimo_tempo_movimento = 0
+motion_timeout = 3  # segundos para agrupar movimentos curtos
+last_motion_time = 0
 
 if not cam.isOpened():
     log_console("error", "Erro ao abrir a camera")
@@ -111,13 +111,13 @@ while cam.isOpened():
         cv2.rectangle(frame_out, (x_min, y_min),
                       (x_max, y_max), (0, 0, 200), 3)
 
-    agora = time.time()
+    now = time.time()
 
     if large_contours:
         ultimo_tempo_movimento = agora
 
         if not recording:
-            timestamp_inicio = datetime.datetime.now().isoformat(timespec="seconds")
+            timestamp_start = datetime.datetime.now().isoformat(timespec="seconds")
             movimento_start = agora
             output_dir = os.path.join("Alertas", datetime.date.today().strftime("%Y-%m-%d"))
             os.makedirs(output_dir, exist_ok=True)
@@ -160,7 +160,7 @@ while cam.isOpened():
     else:
         if recording:
             # espera até não haver movimento por tempo suficiente
-            if agora - ultimo_tempo_movimento > tempo_sem_movimento_limite:
+            if agora - ultimo_tempo_movimento > teempo_sem_movimento_limit:
                 out.release()
                 out = None
                 recording = False
