@@ -64,7 +64,7 @@ output_dir = ""
 
 logs = {"detecoes": []}
 
-motion_timeout = 3  # segundos para agrupar movimentos curtos
+motion_timeout = 3
 last_motion_time = 0
 
 if not cam.isOpened():
@@ -114,11 +114,11 @@ while cam.isOpened():
     now = time.time()
 
     if large_contours:
-        ultimo_tempo_movimento = agora
+        last_motion_time = now
 
         if not recording:
             timestamp_start = datetime.datetime.now().isoformat(timespec="seconds")
-            movimento_start = agora
+            movement_start = now
             output_dir = os.path.join("Alertas", datetime.date.today().strftime("%Y-%m-%d"))
             os.makedirs(output_dir, exist_ok=True)
 
@@ -138,7 +138,7 @@ while cam.isOpened():
                 "motion",
                 "Movimento capturado!",
                 {
-                        "Iniciado em": timestamp_inicio,
+                        "Iniciado em": timestamp_start,
                         "bounding_boxes": [
                         {
                             "x": int(x_min),
@@ -150,9 +150,9 @@ while cam.isOpened():
                 },
             )
 
-        if agora - last_beep > 0.75:
+        if now - last_beep > 0.75:
             winsound.Beep(1000, 75)
-            last_beep = agora
+            last_beep = now
 
         out.write(frame)
         delay_frames = 10
@@ -160,18 +160,18 @@ while cam.isOpened():
     else:
         if recording:
             # espera até não haver movimento por tempo suficiente
-            if agora - ultimo_tempo_movimento > teempo_sem_movimento_limit:
+            if now - last_motion_time > motion_timeout:
                 out.release()
                 out = None
                 recording = False
 
-                timestamp_fim = datetime.datetime.now().isoformat(timespec="seconds")
-                movimento_duration = ultimo_tempo_movimento - movimento_start
+                timestamp_end = datetime.datetime.now().isoformat(timespec="seconds")
+                movement_duration = last_motion_time - movement_start
 
                 logs.setdefault("detecoes", []).append({
-                    "timestamp_inicio": timestamp_inicio,
-                    "timestamp_fim": timestamp_fim,
-                    "duracao_segundos": round(movimento_duration, 2),
+                    "timestamp_inicio": timestamp_start,
+                    "timestamp_fim": timestamp_end,
+                    "duracao_segundos": round(movement_duration, 2),
                     "ficheiro": output_file_name,
                     "bounding_boxes": [{
                         "x": int(x_min),
@@ -185,8 +185,8 @@ while cam.isOpened():
                     "motion",
                     "Fim do Movimento capturado!",
                     {
-                        "Duração": f"{round(movimento_duration, 2)} s",
-                        "Finalizado em": timestamp_fim,
+                        "Duração": f"{round(movement_duration, 2)} s",
+                        "Finalizado em": timestamp_end,
                         "Ficheiro": output_file_name,
                         "bounding_boxes": [
                             {
