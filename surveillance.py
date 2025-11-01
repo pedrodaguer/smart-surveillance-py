@@ -68,17 +68,17 @@ motion_timeout = 3
 last_motion_time = 0
 
 if not cam.isOpened():
-    log_console("error", "Erro ao abrir a camera")
+    log_console("error", "\nErro ao abrir a camera")
 else:
-    log_console("start", "Sistema de vigilância iniciado")
+    log_console("start", "\nSistema de vigilância iniciado")
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    log_console("camera", f"Câmara conectada (resolução: {frame_width}x{frame_height})")
+    log_console("camera", f"\nCâmara conectada (resolução: {frame_width}x{frame_height})")
 
 while cam.isOpened():
     ret, frame = cam.read()
     if not ret:
-        log_console("error", "Erro ao ler a camera")
+        log_console("error", "\nErro ao ler a camera")
         break
 
     fg_mask = backSub.apply(frame)
@@ -113,7 +113,7 @@ while cam.isOpened():
 
     now = time.time()
 
-    if large_contours:
+    if large_contours and delay_frames <= 0:
         last_motion_time = now
 
         if not recording:
@@ -136,7 +136,7 @@ while cam.isOpened():
 
             log_console(
                 "motion",
-                "Movimento capturado!",
+                "\nMovimento capturado!",
                 {
                         "Iniciado em": timestamp_start,
                         "bounding_boxes": [
@@ -155,11 +155,9 @@ while cam.isOpened():
             last_beep = now
 
         out.write(frame)
-        delay_frames = 10
 
     else:
         if recording:
-            # espera até não haver movimento por tempo suficiente
             if now - last_motion_time > motion_timeout:
                 out.release()
                 out = None
@@ -183,7 +181,7 @@ while cam.isOpened():
 
                 log_console(
                     "motion",
-                    "Fim do Movimento capturado!",
+                    "\nFim do Movimento capturado!",
                     {
                         "Duração": f"{round(movement_duration, 2)} s",
                         "Finalizado em": timestamp_end,
@@ -197,6 +195,11 @@ while cam.isOpened():
                             }
                         ],
                     },
+                )
+
+                log_console(
+                    "info",
+                    "\nSistema em Vigilância...",
                 )
 
     cv2.imshow('Live Feed', frame_out)
